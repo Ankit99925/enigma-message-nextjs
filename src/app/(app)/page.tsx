@@ -13,6 +13,7 @@ import Autoplay from "embla-carousel-autoplay"
 import { Card, CardContent } from "@/components/ui/card";
 import Footer from "@/components/Footer";
 
+
 export default function Home() {
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -27,6 +28,8 @@ export default function Home() {
     };
     fetchMessages();
   }, []);
+
+
 
   return (
     <div className="min-h-screen flex flex-col">

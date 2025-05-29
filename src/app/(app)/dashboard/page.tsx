@@ -11,14 +11,16 @@ import axios, { AxiosError } from "axios"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Copy, RefreshCw, Loader2 } from "lucide-react"
+import { Copy, RefreshCw, Loader2, Link as LinkIcon } from "lucide-react"
 import MessageCard from "@/components/MessageCard"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 const DashboardPage = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [isSwitchLoading, setIsSwitchLoading] = useState(false)
-
+  const router = useRouter()
   const handleMessageDelete = (messageId: string) => {
     setMessages(messages.filter((message) => message._id !== messageId))
   }
@@ -115,10 +117,17 @@ const DashboardPage = () => {
       {/* Profile Section */}
       <div className="bg-card rounded-lg p-6 shadow-sm">
         <h2 className="text-2xl font-bold mb-4">Welcome, {username}!</h2>
+        <Link href={`/u/${username}`}>
+          <Button variant="outline">
+            <LinkIcon className="mr-2 h-4 w-4" />
+            View Public Profile
+          </Button>
+        </Link>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Your Profile URL</h3>
+              <p className="text-muted-foreground text-sm">{profileUrl}</p>
               <p className="text-muted-foreground text-sm">Share this URL to receive messages</p>
             </div>
             <Button onClick={copyToClipboard} variant="outline">
@@ -131,13 +140,14 @@ const DashboardPage = () => {
               <h3 className="text-lg font-semibold">Accept Messages</h3>
               <p className="text-muted-foreground text-sm">Toggle to start/stop receiving messages</p>
             </div>
-            <Switch
+            <div className="flex items-center gap-2"> <Switch
               {...register("acceptMessages")}
               checked={acceptMessages}
               onCheckedChange={handleSwitchChange}
               disabled={isSwitchLoading}
-            />
-            <span>Accepting Messages: {acceptMessages ? "Yes" : "No"}</span>
+            /><span>Accepting Messages: {acceptMessages ? "Yes" : "No"}</span></div>
+
+
           </div>
         </div>
       </div>

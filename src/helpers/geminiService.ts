@@ -17,18 +17,13 @@ export const SYSTEM_PROMPT = {
 };
 
 
-
-// const createMessageString = (messages: string) => {
-//   return `${messages}`
-
-// };
-
 export async function generateContent({ SYSTEM_PROMPT, modelName = "gemini-2.0-flash" }: generateContentProps) {
   try {
     const modelAi = genAI.getGenerativeModel({ model: modelName });
     const result = await modelAi.generateContent(SYSTEM_PROMPT.content);
     const output = result.response?.text();
-    return NextResponse.json({ output: output }, { status: 200 })
+    const parsedOutput = output?.split('||');
+    return NextResponse.json({ output: parsedOutput }, { status: 200 })
   } catch (error) {
     console.error("Error generating content:", error);
     return null; // Or throw the error if you prefer error handling in the caller
