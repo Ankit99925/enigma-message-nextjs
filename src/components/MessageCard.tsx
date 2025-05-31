@@ -4,7 +4,6 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 
 import {
@@ -23,54 +22,66 @@ import { toast } from "sonner"
 import axios from "axios"
 import { ApiResponse } from "@/types/ApiResponse"
 import { Message } from "@/models/User"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+
 type MessageCardProps = {
   message: Message
   onMessageDelete: (messageId: string) => void
 }
 
 const MessageCard = ({ message, onMessageDelete }: MessageCardProps) => {
-
   const handleDelete = async () => {
-    const res = await axios.delete<ApiResponse>(`/api/messages/${message._id}`)
-    if (res.data.success) {
-      toast.success("Message deleted successfully")
-      onMessageDelete(message._id)
-    } else {
-      toast.error("Failed to delete message")
+    try {
+      const res = await axios.delete<ApiResponse>(`/api/messages/${message._id}`);
+      if (res.data.success) {
+        toast.success("Message deleted successfully");
+        onMessageDelete(message._id);
+      } else {
+        toast.error("Failed to delete message");
+      }
+    } catch (error) {
+      toast.error("Failed to delete message");
     }
-  }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Card Title</CardTitle>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <CardDescription className="text-sm text-muted-foreground">
+          {new Date(message.createdAt).toLocaleDateString()}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <p className="text-card-foreground line-clamp-3">{message.content}</p>
+      </CardContent>
+      <CardFooter className="pt-2">
         <AlertDialog>
-          <AlertDialogTrigger>Open</AlertDialogTrigger>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle>Delete Message</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your account
-                and remove your data from our servers.
+                Are you sure you want to delete this message? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onMessageDelete(message._id)}>Delete</AlertDialogAction>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <CardDescription>Card Description</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p>Card Content</p>
-      </CardContent>
-      <CardFooter>
-        <p>Card Footer</p>
       </CardFooter>
     </Card>
-
-  )
-}
+  );
+};
 
 export default MessageCard

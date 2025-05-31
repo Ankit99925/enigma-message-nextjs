@@ -6,5 +6,12 @@
     "What's a hobby you have recently started?",
     "If you could have any superpower what would it be?",
     "What simple thing can you do to make someone's day better?"
+  ],
+  "defaultMsg": [
+    "What's a small joy you look forward to every day?",
+    "If animals could talk, which would be the funniest?",
+    "What's a fictional world you wish was real?",
+    "What everyday item would you redesign and how?",
+    "What's a creative way to spread kindness?"
   ]
 }

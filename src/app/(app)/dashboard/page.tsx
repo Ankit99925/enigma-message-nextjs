@@ -13,14 +13,12 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Copy, RefreshCw, Loader2, Link as LinkIcon } from "lucide-react"
 import MessageCard from "@/components/MessageCard"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 const DashboardPage = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [isSwitchLoading, setIsSwitchLoading] = useState(false)
-  const router = useRouter()
   const handleMessageDelete = (messageId: string) => {
     setMessages(messages.filter((message) => message._id !== messageId))
   }
@@ -40,22 +38,22 @@ const DashboardPage = () => {
     setIsSwitchLoading(true)
     try {
       const res = await axios.get<ApiResponse>(`/api/accept-messages`)
-      setValue("acceptMessages", res.data.isAcceptingMessages || false)
+      setValue("acceptMessages", res.data.data.isAcceptingMessages || false)
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
       toast.error(axiosError.response?.data.message || "Something went wrong while fetching message")
     } finally {
       setIsSwitchLoading(false)
     }
-  }, [setValue]) // Only depend on setValue
+  }, [setValue])
 
   // Memoize fetchMessages
   const fetchMessages = useCallback(async (refresh: boolean = false) => {
     setLoading(true)
     setIsSwitchLoading(true)
     try {
-      const res = await axios.get<ApiResponse>(`/api/get-messagess`)
-      setMessages(res.data.messages || [])
+      const res = await axios.get<ApiResponse>(`/api/get-messages`)
+      setMessages(res.data.data.messages || [])
       if (refresh) {
         toast.success("Messages fetched successfully")
       }
@@ -78,8 +76,11 @@ const DashboardPage = () => {
   const handleSwitchChange = async () => {
     setIsSwitchLoading(true)
     try {
-      const res = await axios.post<ApiResponse>(`/api/accept-messages`, { acceptMessages: !acceptMessages })
+      const res = await axios.post<ApiResponse>(`/api/accept-messages`, {
+        isAcceptingMessages: !acceptMessages
+      })
       setValue("acceptMessages", !acceptMessages)
+      toast.success("Message acceptance status updated successfully")
     }
     catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
@@ -175,9 +176,13 @@ const DashboardPage = () => {
             No messages yet. Share your profile URL to start receiving messages!
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {messages.map((message) => (
-              <MessageCard key={message._id} message={message} onMessageDelete={handleMessageDelete} />
+              <MessageCard
+                key={message._id}
+                message={message}
+                onMessageDelete={handleMessageDelete}
+              />
             ))}
           </div>
         )}

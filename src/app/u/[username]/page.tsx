@@ -2,7 +2,7 @@
 import { CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Form } from '@/components/ui/form';
 import { FormField } from '@/components/ui/form';
@@ -14,22 +14,28 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
+import { z } from 'zod';
+import { messageSchema } from '@/schemas/messageSchema';
+import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const PublicPage = () => {
   const { username } = useParams();
-  const form = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [messageContent, setMessageContent] = useState('');
   const [completion, setCompletion] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [isSuggestLoading, setIsSuggestLoading] = useState(false);
 
+  useEffect(() => {
+    fetchSuggestedMessages();
+  }, []);
+
   const fetchSuggestedMessages = async () => {
     setIsSuggestLoading(true);
     try {
-      const response = await axios.post<string[]>(`/api/suggest-messages`);
-      console.log(response.data);
-      setCompletion(response.data);
+      const response = await axios.get<{ output: string[] }>(`/api/suggest-messages`);
+      setCompletion(response.data.output);
       setIsSuggestLoading(false);
     } catch (error) {
       setError(error as Error);
@@ -39,19 +45,41 @@ const PublicPage = () => {
     }
 
   }
+  const form = useForm<z.infer<typeof messageSchema>>({
+    resolver: zodResolver(messageSchema),
+    defaultValues: {
+      content: ''
+    }
+  });
+
 
   const handleMessageClick = (message: string) => {
+    form.setValue('content', message);
     setMessageContent(message);
   }
 
 
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const onSubmit = async (data: z.infer<typeof messageSchema>) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post('/api/send-messages', { ...data, username });
+      if (response.status === 200) {
+        toast.success('Message sent successfully');
+        form.reset();
+        setMessageContent('');
+      }
+      else {
+        toast.error('Failed to send message');
+      }
+    }
+    finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <div className="container mx-auto my-8 p-6 bg-white rounded max-w-4xl">
-      <h1 className="text-4xl font-bold mb-6 text-center">
+    <div className="container mx-auto my-8 p-6 bg-card rounded-lg shadow-sm max-w-4xl">
+      <h1 className="text-4xl font-bold mb-6 text-center text-card-foreground">
         Public Profile Link
       </h1>
       <Form {...form}>
@@ -61,12 +89,16 @@ const PublicPage = () => {
             name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Send Anonymous Message to @{username}</FormLabel>
+                <FormLabel className="text-card-foreground">Send Anonymous Message to @{username}</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Write your anonymous message here"
-                    className="resize-none"
+                    className="resize-none bg-background text-foreground border-input"
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setMessageContent(e.target.value);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -75,7 +107,7 @@ const PublicPage = () => {
           />
           <div className="flex justify-center">
             {isLoading ? (
-              <Button disabled>
+              <Button disabled variant="secondary">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Please wait
               </Button>
@@ -93,25 +125,26 @@ const PublicPage = () => {
           <Button
             onClick={fetchSuggestedMessages}
             className="my-4"
+            variant="secondary"
             disabled={isSuggestLoading}
           >
             Suggest Messages
           </Button>
-          <p>Click on any message below to select it.</p>
+          <p className="text-muted-foreground">Click on any message below to select it.</p>
         </div>
-        <Card>
+        <Card className="bg-card border-border">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Messages</h3>
+            <h3 className="text-xl font-semibold text-card-foreground">Suggested Messages</h3>
           </CardHeader>
           <CardContent className="flex flex-col space-y-4">
             {error ? (
-              <p className="text-red-500">{error.message}</p>
+              <p className="text-destructive">{error.message}</p>
             ) : (
               completion.map((message, index) => (
                 <Button
                   key={index}
                   variant="outline"
-                  className="mb-2"
+                  className="mb-2 text-card-foreground hover:bg-accent hover:text-accent-foreground"
                   onClick={() => handleMessageClick(message)}
                 >
                   {message}
@@ -121,11 +154,11 @@ const PublicPage = () => {
           </CardContent>
         </Card>
       </div>
-      <Separator className="my-6" />
+      <Separator className="my-6 bg-border" />
       <div className="text-center">
-        <div className="mb-4">Get Your Message Board</div>
+        <div className="mb-4 text-card-foreground">Get Your Message Board</div>
         <Link href={'/sign-up'}>
-          <Button>Create Your Account</Button>
+          <Button variant="secondary">Create Your Account</Button>
         </Link>
       </div>
     </div>

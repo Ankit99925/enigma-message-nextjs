@@ -6,6 +6,11 @@ export { default } from "next-auth/middleware"
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request })
 
+  // Allow all API routes to pass through
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next()
+  }
+
   // Only redirect from auth-related pages if user is authenticated
   if (token && (
     request.nextUrl.pathname.startsWith('/signup') ||
@@ -20,9 +25,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 
-  // See "Matching Paths" below to learn more
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/signup/:path*', '/sign-in/:path*', '/dashboard/:path*', '/', '/verify/:path*'],
+  matcher: [
+    '/signup/:path*',
+    '/sign-in/:path*',
+    '/dashboard/:path*',
+    '/',
+    '/verify/:path*',
+    '/api/:path*'  // Add API routes to matcher
+  ]
 }
